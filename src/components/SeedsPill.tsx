@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../theme/theme';
 
 export function SeedsPill({ seeds }: { seeds: number }) {
+  const { colors, spacing, radius } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius), [colors, spacing, radius]);
   return (
     <View style={styles.pill}>
       <MaterialCommunityIcons name="sprout" size={16} color={colors.success} />
@@ -13,6 +16,8 @@ export function SeedsPill({ seeds }: { seeds: number }) {
 }
 
 export function StreakPill({ count }: { count: number }) {
+  const { colors, spacing, radius } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius), [colors, spacing, radius]);
   return (
     <View style={styles.pill}>
       <MaterialCommunityIcons name="fire" size={16} color={colors.accent} />
@@ -21,21 +26,23 @@ export function StreakPill({ count }: { count: number }) {
   );
 }
 
-const styles = StyleSheet.create({
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  text: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
-  },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius) {
+  return StyleSheet.create({
+    pill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.pill,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+    },
+    text: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.text,
+    },
+  });
+}

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PrayerRequest } from '../types';
 import { Symbol } from './Symbol';
-import { colors, radius, spacing, typography } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../theme/theme';
 
 interface Props {
   prayer: PrayerRequest;
@@ -22,6 +23,8 @@ function timeAgo(iso: string): string {
 }
 
 export function PrayerCard({ prayer, currentUserId, onPray }: Props) {
+  const { colors, spacing, radius, typography, cardShadow } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius, cardShadow), [colors, spacing, radius, cardShadow]);
   const alreadyPrayed = prayer.prayedByIds.includes(currentUserId);
 
   return (
@@ -66,55 +69,58 @@ export function PrayerCard({ prayer, currentUserId, onPray }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  text: {
-    lineHeight: 21,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  prayButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
-    backgroundColor: '#EEF2F8',
-  },
-  prayButtonDone: {
-    backgroundColor: '#E7F3EC',
-  },
-  prayLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  answeredTag: {
-    backgroundColor: '#E7F3EC',
-    borderRadius: radius.pill,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-  },
-  answeredText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.success,
-  },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardShadow: object) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      gap: spacing.sm,
+      ...cardShadow,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    text: {
+      lineHeight: 21,
+    },
+    footer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    prayButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.pill,
+      backgroundColor: colors.primarySoft,
+    },
+    prayButtonDone: {
+      backgroundColor: colors.successSoft,
+    },
+    prayLabel: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    answeredTag: {
+      backgroundColor: colors.successSoft,
+      borderRadius: radius.pill,
+      paddingVertical: 2,
+      paddingHorizontal: spacing.sm,
+    },
+    answeredText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: colors.success,
+    },
+  });
+}

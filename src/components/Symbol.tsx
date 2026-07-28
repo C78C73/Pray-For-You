@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getSymbol } from '../data/symbols';
 import { getFrame } from '../data/frames';
-import { colors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { ThemeColors } from '../theme/theme';
 
 interface Props {
   symbolId: string;
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export function Symbol({ symbolId, frameId, photoUri, size = 56 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const frame = getFrame(frameId);
   const ringWidth = frame.id === 'none' ? 0 : Math.max(2, Math.round(size * 0.05));
 
@@ -44,16 +47,18 @@ export function Symbol({ symbolId, frameId, photoUri, size = 56 }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  ring: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    overflow: 'hidden',
-  },
-  iconWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EEF2F8',
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    ring: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface,
+      overflow: 'hidden',
+    },
+    iconWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primarySoft,
+    },
+  });
+}

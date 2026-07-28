@@ -3,10 +3,11 @@ import { Tabs, Redirect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAppStore } from '../../src/store/useAppStore';
-import { colors } from '../../src/theme/theme';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function TabsLayout() {
   const user = useAppStore((s) => s.user);
+  const { colors } = useTheme();
   if (!user) return <Redirect href="/welcome" />;
 
   return (

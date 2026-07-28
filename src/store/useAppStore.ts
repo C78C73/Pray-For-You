@@ -10,6 +10,19 @@ import { SEED_REWARDS } from '../data/seedRewards';
 import { SYMBOLS } from '../data/symbols';
 import { FRAMES } from '../data/frames';
 import { notifyPrayedForYou } from '../services/notificationService';
+import { ThemeMode, AccentId } from '../theme/theme';
+
+interface Preferences {
+  themeMode: ThemeMode;
+  accentId: AccentId;
+  showStreak: boolean;
+}
+
+const DEFAULT_PREFERENCES: Preferences = {
+  themeMode: 'system',
+  accentId: 'blue',
+  showStreak: true,
+};
 
 interface AppState {
   hasHydrated: boolean;
@@ -17,10 +30,15 @@ interface AppState {
   prayers: PrayerRequest[];
   friends: Friend[];
   notifications: AppNotification[];
+  preferences: Preferences;
 
   setHasHydrated: (v: boolean) => void;
   signIn: (method: AuthMethod, displayName: string, email: string | null) => void;
   signOut: () => void;
+
+  setThemeMode: (mode: ThemeMode) => void;
+  setAccentId: (accentId: AccentId) => void;
+  setShowStreak: (show: boolean) => void;
 
   setSymbol: (symbolId: string) => void;
   setFrame: (frameId: string) => void;
@@ -105,6 +123,7 @@ export const useAppStore = create<AppState>()(
       prayers: [],
       friends: [],
       notifications: [],
+      preferences: DEFAULT_PREFERENCES,
 
       setHasHydrated: (v) => set({ hasHydrated: v }),
 
@@ -116,7 +135,13 @@ export const useAppStore = create<AppState>()(
         });
       },
 
+      // Appearance and the streak-visibility switch are device settings, not
+      // account data — they deliberately survive sign-out.
       signOut: () => set({ user: null, prayers: [], friends: [], notifications: [] }),
+
+      setThemeMode: (themeMode) => set((s) => ({ preferences: { ...s.preferences, themeMode } })),
+      setAccentId: (accentId) => set((s) => ({ preferences: { ...s.preferences, accentId } })),
+      setShowStreak: (showStreak) => set((s) => ({ preferences: { ...s.preferences, showStreak } })),
 
       setSymbol: (symbolId) =>
         set((s) =>

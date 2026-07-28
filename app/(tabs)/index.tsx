@@ -10,15 +10,19 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { SeedsPill, StreakPill } from '../../src/components/SeedsPill';
 import { getVerseOfTheDay } from '../../src/data/verses';
 import { todayKey } from '../../src/utils/date';
-import { colors, radius, spacing, typography } from '../../src/theme/theme';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../../src/theme/theme';
 
 type Filter = 'global' | 'friends';
 
 export default function PrayFeed() {
   const router = useRouter();
+  const { colors, spacing, radius, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius), [colors, spacing, radius]);
   const user = useAppStore((s) => s.user)!;
   const prayers = useAppStore((s) => s.prayers);
   const markPrayed = useAppStore((s) => s.markPrayed);
+  const showStreak = useAppStore((s) => s.preferences.showStreak);
   const [filter, setFilter] = useState<Filter>('global');
 
   const verse = useMemo(() => getVerseOfTheDay(todayKey()), []);
@@ -36,7 +40,7 @@ export default function PrayFeed() {
       <View style={styles.header}>
         <Text style={typography.title}>Pray</Text>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          <StreakPill count={user.streak.count} />
+          {showStreak && <StreakPill count={user.streak.count} />}
           <SeedsPill seeds={user.seeds} />
         </View>
       </View>
@@ -78,57 +82,59 @@ export default function PrayFeed() {
       />
 
       <Pressable style={styles.fab} onPress={() => router.push('/new-request')}>
-        <MaterialCommunityIcons name="plus" size={26} color={colors.white} />
+        <MaterialCommunityIcons name="plus" size={26} color={colors.primaryText} />
       </Pressable>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  verseCard: {
-    margin: spacing.lg,
-    marginBottom: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    gap: 4,
-  },
-  verseText: { color: colors.white, fontSize: 15, fontStyle: 'italic', lineHeight: 21 },
-  verseRef: { color: '#D9E2F1', fontSize: 12, fontWeight: '600' },
-  segment: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.lg,
-    backgroundColor: '#EDEAE0',
-    borderRadius: radius.pill,
-    padding: 3,
-  },
-  segmentBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.pill, alignItems: 'center' },
-  segmentActive: { backgroundColor: colors.surface },
-  segmentLabel: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-  segmentLabelActive: { color: colors.text },
-  list: { padding: spacing.lg, paddingBottom: 100 },
-  fab: {
-    position: 'absolute',
-    right: spacing.lg,
-    bottom: spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+    },
+    verseCard: {
+      margin: spacing.lg,
+      marginBottom: spacing.sm,
+      padding: spacing.md,
+      backgroundColor: colors.primary,
+      borderRadius: radius.lg,
+      gap: 4,
+    },
+    verseText: { color: colors.primaryText, fontSize: 15, fontStyle: 'italic', lineHeight: 21 },
+    verseRef: { color: colors.primaryText, opacity: 0.8, fontSize: 12, fontWeight: '600' },
+    segment: {
+      flexDirection: 'row',
+      marginHorizontal: spacing.lg,
+      backgroundColor: colors.border,
+      borderRadius: radius.pill,
+      padding: 3,
+    },
+    segmentBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.pill, alignItems: 'center' },
+    segmentActive: { backgroundColor: colors.surface },
+    segmentLabel: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+    segmentLabelActive: { color: colors.text },
+    list: { padding: spacing.lg, paddingBottom: 100 },
+    fab: {
+      position: 'absolute',
+      right: spacing.lg,
+      bottom: spacing.lg,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 4,
+    },
+  });
+}

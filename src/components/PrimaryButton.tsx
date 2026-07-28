@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, Text, StyleSheet, ViewStyle, ActivityIndicator } from 'react-native';
-import { colors, radius, spacing } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../theme/theme';
 
 interface Props {
   label: string;
@@ -12,6 +13,10 @@ interface Props {
 }
 
 export function PrimaryButton({ label, onPress, variant = 'primary', disabled, loading, style }: Props) {
+  const { colors, spacing, radius } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius), [colors, spacing, radius]);
+  const textColor = variant === 'primary' ? colors.primaryText : colors.primary;
+
   return (
     <Pressable
       onPress={onPress}
@@ -27,31 +32,26 @@ export function PrimaryButton({ label, onPress, variant = 'primary', disabled, l
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? colors.white : colors.primary} />
+        <ActivityIndicator color={textColor} />
       ) : (
-        <Text
-          style={[
-            styles.label,
-            { color: variant === 'primary' ? colors.white : colors.primary },
-          ]}
-        >
-          {label}
-        </Text>
+        <Text style={[styles.label, { color: textColor }]}>{label}</Text>
       )}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius) {
+  return StyleSheet.create({
+    base: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });
+}

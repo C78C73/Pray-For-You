@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Redirect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAppStore } from '../src/store/useAppStore';
 import { PrimaryButton } from '../src/components/PrimaryButton';
-import { colors, radius, spacing, typography } from '../src/theme/theme';
+import { useTheme } from '../src/theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../src/theme/theme';
 
 export default function Welcome() {
+  const { colors, spacing, radius, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius), [colors, spacing, radius]);
   const user = useAppStore((s) => s.user);
   const signIn = useAppStore((s) => s.signIn);
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -79,39 +82,43 @@ export default function Welcome() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-    gap: spacing.xl,
-  },
-  hero: {
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  title: {
-    ...typography.title,
-    fontSize: 30,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    fontSize: 15,
-    color: colors.text,
-  },
-  note: {
-    ...typography.caption,
-    textAlign: 'center',
-  },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius) {
+  return StyleSheet.create({
+    wrap: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.lg,
+      gap: spacing.xl,
+    },
+    hero: {
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    title: {
+      fontSize: 30,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: colors.textMuted,
+      textAlign: 'center',
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      fontSize: 15,
+      color: colors.text,
+    },
+    note: {
+      fontSize: 13,
+      color: colors.textMuted,
+      textAlign: 'center',
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,9 +7,12 @@ import { BIBLE_VERSIONS, BibleVersionId, SUGGESTED_PASSAGES, fetchPassage } from
 import { BibleVerse } from '../../src/types';
 import { todayKey } from '../../src/utils/date';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
-import { colors, radius, spacing, typography } from '../../src/theme/theme';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../../src/theme/theme';
 
 export default function BibleScreen() {
+  const { colors, spacing, radius, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius), [colors, spacing, radius]);
   const user = useAppStore((s) => s.user)!;
   const recordBibleReadToday = useAppStore((s) => s.recordBibleReadToday);
 
@@ -84,31 +87,33 @@ export default function BibleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
-  chipsRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm },
-  chip: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  versionChip: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipLabel: { fontSize: 13, fontWeight: '600', color: colors.text },
-  chipLabelActive: { color: colors.white },
-  passage: { padding: spacing.lg, paddingTop: spacing.sm, gap: spacing.sm },
-  verseLine: { ...typography.body, lineHeight: 24 },
-  verseNum: { fontWeight: '700', color: colors.primary },
-  footer: { padding: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+    chipsRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm },
+    chip: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    versionChip: {
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+    chipLabel: { fontSize: 13, fontWeight: '600', color: colors.text },
+    chipLabelActive: { color: colors.primaryText },
+    passage: { padding: spacing.lg, paddingTop: spacing.sm, gap: spacing.sm },
+    verseLine: { fontSize: 15, lineHeight: 24, color: colors.text },
+    verseNum: { fontWeight: '700', color: colors.primary },
+    footer: { padding: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border },
+  });
+}

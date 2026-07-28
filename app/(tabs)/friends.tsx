@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, FlatList, TextInput, Pressable, StyleSheet, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,9 +7,12 @@ import { useAppStore } from '../../src/store/useAppStore';
 import { Symbol } from '../../src/components/Symbol';
 import { EmptyState } from '../../src/components/EmptyState';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
-import { colors, radius, spacing, typography } from '../../src/theme/theme';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../../src/theme/theme';
 
 export default function FriendsScreen() {
+  const { colors, spacing, radius, typography, cardShadow } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius, cardShadow), [colors, spacing, radius, cardShadow]);
   const user = useAppStore((s) => s.user)!;
   const friends = useAppStore((s) => s.friends);
   const addFriendByCode = useAppStore((s) => s.addFriendByCode);
@@ -80,43 +83,47 @@ export default function FriendsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
-  codeCard: {
-    margin: spacing.lg,
-    marginBottom: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  codeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
-  code: { fontSize: 22, fontWeight: '800', letterSpacing: 2, color: colors.primary },
-  shareBtn: { padding: spacing.sm },
-  addRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, alignItems: 'center' },
-  input: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    fontSize: 15,
-    color: colors.text,
-  },
-  list: { padding: spacing.lg, paddingBottom: 100 },
-  friendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardShadow: object) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+    codeCard: {
+      margin: spacing.lg,
+      marginBottom: spacing.sm,
+      padding: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...cardShadow,
+    },
+    codeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+    code: { fontSize: 22, fontWeight: '800', letterSpacing: 2, color: colors.primary },
+    shareBtn: { padding: spacing.sm },
+    addRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, alignItems: 'center' },
+    input: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      fontSize: 15,
+      color: colors.text,
+    },
+    list: { padding: spacing.lg, paddingBottom: 100 },
+    friendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.sm,
+      marginBottom: spacing.sm,
+      ...cardShadow,
+    },
+  });
+}

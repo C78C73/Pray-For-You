@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { useAppStore } from '../src/store/useAppStore';
 import { PrimaryButton } from '../src/components/PrimaryButton';
 import { PrayerVisibility } from '../src/types';
-import { colors, radius, spacing, typography } from '../src/theme/theme';
+import { useTheme } from '../src/theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../src/theme/theme';
 
 const MAX_LEN = 280;
 
 export default function NewRequest() {
   const router = useRouter();
+  const { colors, spacing, radius, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius), [colors, spacing, radius]);
   const addPrayerRequest = useAppStore((s) => s.addPrayerRequest);
   const [text, setText] = useState('');
   const [visibility, setVisibility] = useState<PrayerVisibility>('friends');
@@ -61,30 +64,32 @@ export default function NewRequest() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: colors.background, padding: spacing.lg },
-  input: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    fontSize: 15,
-    minHeight: 120,
-    textAlignVertical: 'top',
-    color: colors.text,
-  },
-  counter: { ...typography.caption, textAlign: 'right', marginTop: 4 },
-  segment: {
-    flexDirection: 'row',
-    backgroundColor: '#EDEAE0',
-    borderRadius: radius.pill,
-    padding: 3,
-    marginTop: spacing.sm,
-  },
-  segmentBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.pill, alignItems: 'center' },
-  segmentActive: { backgroundColor: colors.surface },
-  segmentLabel: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-  segmentLabelActive: { color: colors.text },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius) {
+  return StyleSheet.create({
+    wrap: { flex: 1, backgroundColor: colors.background, padding: spacing.lg },
+    input: {
+      marginTop: spacing.sm,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      fontSize: 15,
+      minHeight: 120,
+      textAlignVertical: 'top',
+      color: colors.text,
+    },
+    counter: { fontSize: 13, color: colors.textMuted, textAlign: 'right', marginTop: 4 },
+    segment: {
+      flexDirection: 'row',
+      backgroundColor: colors.border,
+      borderRadius: radius.pill,
+      padding: 3,
+      marginTop: spacing.sm,
+    },
+    segmentBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.pill, alignItems: 'center' },
+    segmentActive: { backgroundColor: colors.surface },
+    segmentLabel: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+    segmentLabelActive: { color: colors.text },
+  });
+}

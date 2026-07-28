@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,9 +8,12 @@ import { SYMBOLS } from '../src/data/symbols';
 import { FRAMES } from '../src/data/frames';
 import { Symbol } from '../src/components/Symbol';
 import { SeedsPill } from '../src/components/SeedsPill';
-import { colors, radius, spacing, typography } from '../src/theme/theme';
+import { useTheme } from '../src/theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../src/theme/theme';
 
 export default function EditSymbol() {
+  const { colors, spacing, radius, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius), [colors, spacing, radius]);
   const user = useAppStore((s) => s.user)!;
   const setSymbol = useAppStore((s) => s.setSymbol);
   const setFrame = useAppStore((s) => s.setFrame);
@@ -35,7 +38,7 @@ export default function EditSymbol() {
     }
   }
 
-  function handleSymbolPress(id: string, cost: number) {
+  function handleSymbolPress(id: string) {
     if (user.ownedSymbolIds.includes(id)) {
       setSymbol(id);
       return;
@@ -45,7 +48,7 @@ export default function EditSymbol() {
     else Alert.alert('Keep growing', result.message);
   }
 
-  function handleFramePress(id: string, cost: number) {
+  function handleFramePress(id: string) {
     if (user.ownedFrameIds.includes(id)) {
       setFrame(id);
       return;
@@ -76,7 +79,7 @@ export default function EditSymbol() {
             const owned = user.ownedSymbolIds.includes(s.id);
             const active = user.symbolId === s.id;
             return (
-              <Pressable key={s.id} onPress={() => handleSymbolPress(s.id, s.costSeeds)} style={styles.gridItem}>
+              <Pressable key={s.id} onPress={() => handleSymbolPress(s.id)} style={styles.gridItem}>
                 <View style={[styles.iconCircle, active && styles.iconCircleActive]}>
                   <MaterialCommunityIcons name={s.icon as any} size={26} color={colors.primary} />
                   {!owned && (
@@ -100,7 +103,7 @@ export default function EditSymbol() {
             const owned = user.ownedFrameIds.includes(f.id);
             const active = user.frameId === f.id;
             return (
-              <Pressable key={f.id} onPress={() => handleFramePress(f.id, f.costSeeds)} style={styles.gridItem}>
+              <Pressable key={f.id} onPress={() => handleFramePress(f.id)} style={styles.gridItem}>
                 <View
                   style={[
                     styles.iconCircle,
@@ -125,34 +128,36 @@ export default function EditSymbol() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: colors.background },
-  photoBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.xs },
-  photoBtnLabel: { color: colors.primary, fontSize: 13, fontWeight: '600' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  gridItem: { width: 84, alignItems: 'center', gap: 2 },
-  iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconCircleActive: { backgroundColor: '#EEF2F8' },
-  lockBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    backgroundColor: colors.textMuted,
-    borderRadius: 8,
-    width: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemLabel: { fontSize: 11, textAlign: 'center', color: colors.text },
-  itemCost: { fontSize: 10, color: colors.textMuted },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius) {
+  return StyleSheet.create({
+    wrap: { flex: 1, backgroundColor: colors.background },
+    photoBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.xs },
+    photoBtnLabel: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+    gridItem: { width: 84, alignItems: 'center', gap: 2 },
+    iconCircle: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconCircleActive: { backgroundColor: colors.primarySoft },
+    lockBadge: {
+      position: 'absolute',
+      bottom: -2,
+      right: -2,
+      backgroundColor: colors.textMuted,
+      borderRadius: 8,
+      width: 16,
+      height: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    itemLabel: { fontSize: 11, textAlign: 'center', color: colors.text },
+    itemCost: { fontSize: 10, color: colors.textMuted },
+  });
+}

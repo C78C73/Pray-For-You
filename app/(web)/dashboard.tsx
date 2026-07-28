@@ -16,9 +16,19 @@ import {
   fetchPassage,
 } from '../../src/services/bibleService';
 import { BibleVerse, PrayerVisibility } from '../../src/types';
-import { colors, radius, spacing, typography } from '../../src/theme/theme';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { ThemeColors, Spacing, Radius } from '../../src/theme/theme';
 
 const MAX_LEN = 280;
+
+function useDashboardTheme() {
+  const theme = useTheme();
+  const styles = useMemo(
+    () => makeStyles(theme.colors, theme.spacing, theme.radius, theme.cardShadow),
+    [theme.colors, theme.spacing, theme.radius, theme.cardShadow]
+  );
+  return { ...theme, styles };
+}
 
 export default function Dashboard() {
   const router = useRouter();
@@ -29,6 +39,7 @@ export default function Dashboard() {
   const prayForFriend = useAppStore((s) => s.prayForFriend);
   const addPrayerRequest = useAppStore((s) => s.addPrayerRequest);
   const recordBibleReadToday = useAppStore((s) => s.recordBibleReadToday);
+  const { styles } = useDashboardTheme();
 
   if (!user) return <Redirect href="/welcome" />;
 
@@ -55,6 +66,8 @@ export default function Dashboard() {
 
 function Header({ onOpenProfile, onOpenSettings }: { onOpenProfile: () => void; onOpenSettings: () => void }) {
   const user = useAppStore((s) => s.user)!;
+  const showStreak = useAppStore((s) => s.preferences.showStreak);
+  const { colors, spacing, styles } = useDashboardTheme();
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
@@ -62,7 +75,7 @@ function Header({ onOpenProfile, onOpenSettings }: { onOpenProfile: () => void; 
         <Text style={styles.headerTitle}>Faithstreak</Text>
       </View>
       <View style={styles.headerRight}>
-        <StreakPill count={user.streak.count} />
+        {showStreak && <StreakPill count={user.streak.count} />}
         <SeedsPill seeds={user.seeds} />
         <Pressable onPress={onOpenProfile}>
           <Symbol symbolId={user.symbolId} frameId={user.frameId} photoUri={user.photoUri} size={32} />
@@ -76,6 +89,7 @@ function Header({ onOpenProfile, onOpenSettings }: { onOpenProfile: () => void; 
 }
 
 function Column({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+  const { colors, typography, styles } = useDashboardTheme();
   return (
     <View style={styles.column}>
       <View style={styles.columnHeader}>
@@ -88,6 +102,7 @@ function Column({ title, icon, children }: { title: string; icon: string; childr
 }
 
 function BibleColumn({ onReadToday, readToday }: { onReadToday: () => void; readToday: boolean }) {
+  const { colors, spacing, styles } = useDashboardTheme();
   const [passage, setPassage] = useState(SUGGESTED_PASSAGES[0]);
   const [version, setVersion] = useState<BibleVersionId>('web');
   const [verses, setVerses] = useState<BibleVerse[]>([]);
@@ -163,6 +178,7 @@ function PeopleColumn({
   onAddFriend: (code: string) => { ok: boolean; message: string };
   onPray: (friendId: string) => void;
 }) {
+  const { colors, spacing, typography, styles } = useDashboardTheme();
   const [code, setCode] = useState('');
 
   function handleAdd() {
@@ -240,6 +256,8 @@ function YouColumn({
   prayers: ReturnType<typeof useAppStore.getState>['prayers'];
   onSubmit: (text: string, visibility: PrayerVisibility) => void;
 }) {
+  const showStreak = useAppStore((s) => s.preferences.showStreak);
+  const { colors, spacing, typography, styles } = useDashboardTheme();
   const [text, setText] = useState('');
   const [visibility, setVisibility] = useState<PrayerVisibility>('friends');
   if (!user) return null;
@@ -255,11 +273,13 @@ function YouColumn({
   return (
     <Column title="You" icon="account-circle">
       <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <MaterialCommunityIcons name="fire" size={20} color={colors.accent} />
-          <Text style={styles.statValue}>{user.streak.count}</Text>
-          <Text style={typography.caption}>Day streak</Text>
-        </View>
+        {showStreak && (
+          <View style={styles.stat}>
+            <MaterialCommunityIcons name="fire" size={20} color={colors.accent} />
+            <Text style={styles.statValue}>{user.streak.count}</Text>
+            <Text style={typography.caption}>Day streak</Text>
+          </View>
+        )}
         <View style={styles.stat}>
           <MaterialCommunityIcons name="sprout" size={20} color={colors.success} />
           <Text style={styles.statValue}>{user.seeds}</Text>
@@ -310,127 +330,131 @@ function YouColumn({
   );
 }
 
-const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  columnsRow: { flexGrow: 1 },
-  column: {
-    width: 380,
-    minWidth: 340,
-    padding: spacing.lg,
-    borderRightWidth: 1,
-    borderRightColor: colors.border,
-    gap: spacing.sm,
-  },
-  columnHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
-  scrollArea: { flex: 1, marginTop: spacing.xs },
-  verseCard: {
-    padding: spacing.md,
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    gap: 4,
-  },
-  verseText: { color: colors.white, fontSize: 14, fontStyle: 'italic', lineHeight: 20 },
-  verseRef: { color: '#D9E2F1', fontSize: 12, fontWeight: '600' },
-  chipsRow: { gap: spacing.xs, paddingVertical: 2 },
-  chip: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  smallChip: {
-    paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipLabel: { fontSize: 12, fontWeight: '600', color: colors.text },
-  chipLabelActive: { color: colors.white },
-  verseLine: { ...typography.body, fontSize: 14, lineHeight: 21 },
-  verseNum: { fontWeight: '700', color: colors.primary },
-  addRow: { flexDirection: 'row', gap: spacing.xs, alignItems: 'center' },
-  input: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    fontSize: 14,
-    color: colors.text,
-  },
-  friendCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.sm,
-    gap: spacing.xs,
-  },
-  friendRequestText: { fontStyle: 'italic' },
-  prayButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: '#EEF2F8',
-  },
-  prayButtonDone: { backgroundColor: '#E7F3EC' },
-  prayLabel: { fontSize: 12, fontWeight: '700', color: colors.primary },
-  statsRow: { flexDirection: 'row', gap: spacing.lg },
-  stat: { alignItems: 'center', gap: 2 },
-  statValue: { fontSize: 18, fontWeight: '700', color: colors.text },
-  textArea: {
-    marginTop: spacing.xs,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    fontSize: 14,
-    minHeight: 90,
-    textAlignVertical: 'top',
-    color: colors.text,
-  },
-  segment: {
-    flexDirection: 'row',
-    backgroundColor: '#EDEAE0',
-    borderRadius: radius.pill,
-    padding: 3,
-    marginTop: spacing.xs,
-  },
-  segmentBtn: { flex: 1, paddingVertical: spacing.xs, borderRadius: radius.pill, alignItems: 'center' },
-  segmentActive: { backgroundColor: colors.surface },
-  segmentLabel: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
-  segmentLabelActive: { color: colors.text },
-  myRequestCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.sm,
-    gap: 2,
-  },
-});
+function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardShadow: object) {
+  return StyleSheet.create({
+    page: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+    headerTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    columnsRow: { flexGrow: 1 },
+    column: {
+      width: 380,
+      minWidth: 340,
+      padding: spacing.lg,
+      borderRightWidth: 1,
+      borderRightColor: colors.border,
+      gap: spacing.sm,
+    },
+    columnHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+    scrollArea: { flex: 1, marginTop: spacing.xs },
+    verseCard: {
+      padding: spacing.md,
+      backgroundColor: colors.primary,
+      borderRadius: radius.lg,
+      gap: 4,
+    },
+    verseText: { color: colors.primaryText, fontSize: 14, fontStyle: 'italic', lineHeight: 20 },
+    verseRef: { color: colors.primaryText, opacity: 0.8, fontSize: 12, fontWeight: '600' },
+    chipsRow: { gap: spacing.xs, paddingVertical: 2 },
+    chip: {
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    smallChip: {
+      paddingVertical: 4,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+    chipLabel: { fontSize: 12, fontWeight: '600', color: colors.text },
+    chipLabelActive: { color: colors.primaryText },
+    verseLine: { fontSize: 14, lineHeight: 21, color: colors.text },
+    verseNum: { fontWeight: '700', color: colors.primary },
+    addRow: { flexDirection: 'row', gap: spacing.xs, alignItems: 'center' },
+    input: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.sm,
+      fontSize: 14,
+      color: colors.text,
+    },
+    friendCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.sm,
+      gap: spacing.xs,
+      ...cardShadow,
+    },
+    friendRequestText: { fontStyle: 'italic' },
+    prayButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.pill,
+      backgroundColor: colors.primarySoft,
+    },
+    prayButtonDone: { backgroundColor: colors.successSoft },
+    prayLabel: { fontSize: 12, fontWeight: '700', color: colors.primary },
+    statsRow: { flexDirection: 'row', gap: spacing.lg },
+    stat: { alignItems: 'center', gap: 2 },
+    statValue: { fontSize: 18, fontWeight: '700', color: colors.text },
+    textArea: {
+      marginTop: spacing.xs,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      padding: spacing.sm,
+      fontSize: 14,
+      minHeight: 90,
+      textAlignVertical: 'top',
+      color: colors.text,
+    },
+    segment: {
+      flexDirection: 'row',
+      backgroundColor: colors.border,
+      borderRadius: radius.pill,
+      padding: 3,
+      marginTop: spacing.xs,
+    },
+    segmentBtn: { flex: 1, paddingVertical: spacing.xs, borderRadius: radius.pill, alignItems: 'center' },
+    segmentActive: { backgroundColor: colors.surface },
+    segmentLabel: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+    segmentLabelActive: { color: colors.text },
+    myRequestCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.sm,
+      gap: 2,
+      ...cardShadow,
+    },
+  });
+}
