@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Faithstreak",
+    "slug": "faithstreak",
+    "scheme": "faithstreak",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.faithstreak.app"
+    },
+    "android": {
+      "package": "com.faithstreak.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E8F0FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static",
+      "name": "Faithstreak",
+      "shortName": "Faithstreak",
+      "themeColor": "#2B4C7E",
+      "backgroundColor": "#F7F5EF",
+      "display": "standalone",
+      "lang": "en"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#2B4C7E"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Faithstreak needs access to your photos so you can set a profile picture."
+        }
+      ]
+    ]
+  }
+}
