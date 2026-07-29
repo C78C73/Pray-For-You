@@ -24,11 +24,12 @@ export default function GroupDetail() {
   const markPrayed = useAppStore((s) => s.markPrayed);
   const addGroupPrayerRequest = useAppStore((s) => s.addGroupPrayerRequest);
   const joinGroupOpen = useAppStore((s) => s.joinGroupOpen);
-  const joinGroupByCode = useAppStore((s) => s.joinGroupByCode);
+  const requestToJoinGroup = useAppStore((s) => s.requestToJoinGroup);
+  const approveJoinRequest = useAppStore((s) => s.approveJoinRequest);
+  const denyJoinRequest = useAppStore((s) => s.denyJoinRequest);
   const leaveGroup = useAppStore((s) => s.leaveGroup);
 
   const [text, setText] = useState('');
-  const [code, setCode] = useState('');
 
   if (!group) {
     return (
@@ -40,6 +41,8 @@ export default function GroupDetail() {
   }
 
   const isMember = group.memberIds.includes(user.id);
+  const isOwner = group.ownerId === user.id;
+  const hasRequested = group.pendingRequests.some((r) => r.userId === user.id);
 
   function submit() {
     if (!text.trim() || !group) return;
@@ -47,11 +50,10 @@ export default function GroupDetail() {
     setText('');
   }
 
-  function handleJoinByCode() {
+  function handleRequest() {
     if (!group) return;
-    const result = joinGroupByCode(code);
-    if (!result.ok) Alert.alert('Not joined', result.message);
-    setCode('');
+    const result = requestToJoinGroup(group.id);
+    Alert.alert(result.ok ? 'Request sent' : 'Not sent', result.message);
   }
 
   function handleLeave() {
@@ -99,22 +101,36 @@ export default function GroupDetail() {
           <PrimaryButton label={`Join ${group.name}`} onPress={() => joinGroupOpen(group.id)} />
         ) : (
           <View style={{ gap: spacing.sm }}>
-            <Text style={typography.caption}>This group is invite only. Enter the invite code to join.</Text>
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <TextInput
-                value={code}
-                onChangeText={setCode}
-                placeholder="Invite code"
-                placeholderTextColor={colors.textMuted}
-                autoCapitalize="characters"
-                style={styles.codeInput}
-              />
-              <PrimaryButton label="Join" onPress={handleJoinByCode} disabled={!code.trim()} />
-            </View>
+            <Text style={typography.caption}>
+              This group is invite only — the owner needs to approve your request to join.
+            </Text>
+            <PrimaryButton
+              label={hasRequested ? 'Request sent' : 'Request to join'}
+              onPress={handleRequest}
+              disabled={hasRequested}
+              variant={hasRequested ? 'secondary' : 'primary'}
+            />
           </View>
         )
       ) : (
         <>
+          {isOwner && group.pendingRequests.length > 0 && (
+            <View style={{ gap: spacing.sm }}>
+              <Text style={typography.heading}>Join requests</Text>
+              {group.pendingRequests.map((r) => (
+                <View key={r.userId} style={styles.requestRow}>
+                  <Text style={[typography.body, { flex: 1 }]}>{r.displayName}</Text>
+                  <Pressable onPress={() => denyJoinRequest(group.id, r.userId)} style={styles.denyBtn}>
+                    <MaterialCommunityIcons name="close" size={16} color={colors.danger} />
+                  </Pressable>
+                  <Pressable onPress={() => approveJoinRequest(group.id, r.userId)} style={styles.approveBtn}>
+                    <MaterialCommunityIcons name="check" size={16} color={colors.white} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+
           <View>
             <Text style={typography.caption}>Share a prayer need with the group</Text>
             <TextInput
@@ -170,16 +186,33 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
     },
     code: { fontSize: 18, fontWeight: '800', letterSpacing: 2, color: colors.primary },
     shareBtn: { padding: spacing.xs },
-    codeInput: {
-      flex: 1,
+    requestRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
       backgroundColor: colors.surface,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: radius.md,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-      fontSize: 15,
-      color: colors.text,
+      padding: spacing.sm,
+    },
+    denyBtn: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: colors.background,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    approveBtn: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: colors.success,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     textArea: {
       marginTop: spacing.xs,

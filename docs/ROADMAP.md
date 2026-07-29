@@ -14,11 +14,12 @@ strangers can post and see each other's content:
 - Real friend lookup (currently the "add by code" flow fabricates a demo
   friend locally since there's no backend yet — see the comment in
   `src/store/useAppStore.ts`)
-- Real group membership + invite-code lookup across devices (today,
-  `joinGroupByCode` only matches groups already known on your own device —
-  it can't find a group that only exists on someone else's phone yet), and
-  the same report/block/moderation coverage extended to group prayer feeds,
-  not just the global one
+- Real group directory + membership across devices (today, `findGroupByCode`
+  and the "All groups" search only see groups already known on your own
+  device — there's no shared index of every group that exists yet, so a
+  group made on someone else's phone won't show up on yours until a
+  backend exists), and the same report/block/moderation coverage extended
+  to group prayer feeds, not just the global one
 
 ## Strong candidates to add next
 

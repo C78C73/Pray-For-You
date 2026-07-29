@@ -7,6 +7,7 @@ import {
   Friend,
   Group,
   GroupVisibility,
+  GroupJoinRequest,
   PrayerRequest,
   PrayerVisibility,
   UserProfile,
@@ -68,7 +69,10 @@ interface AppState {
 
   createGroup: (name: string, bio: string, visibility: GroupVisibility) => { ok: boolean; message: string };
   joinGroupOpen: (groupId: string) => void;
-  joinGroupByCode: (code: string) => { ok: boolean; message: string };
+  requestToJoinGroup: (groupId: string) => { ok: boolean; message: string };
+  approveJoinRequest: (groupId: string, userId: string) => void;
+  denyJoinRequest: (groupId: string, userId: string) => void;
+  findGroupByCode: (code: string) => { ok: boolean; message: string; groupId?: string };
   leaveGroup: (groupId: string) => void;
   addGroupPrayerRequest: (groupId: string, text: string) => void;
 
@@ -132,9 +136,9 @@ function seedDemoPrayers(): PrayerRequest[] {
 }
 
 // Demo-mode: seeded so Groups has something to browse/join on first run.
-// Both are 'open' on purpose — an invite-only group is easiest to try by
-// creating your own and testing joinGroupByCode with its real code, since
-// there's no backend yet to hand out a second device's invite code.
+// The third group is owned by the signed-in user with a demo request
+// already pending, so the approve/deny UI is visible without needing a
+// second device.
 function seedDemoGroups(userId: string): Group[] {
   const now = new Date().toISOString();
   return [
@@ -146,6 +150,7 @@ function seedDemoGroups(userId: string): Group[] {
       inviteCode: generateFriendCode(),
       ownerId: 'community',
       memberIds: [userId],
+      pendingRequests: [],
       createdAt: now,
     },
     {
@@ -156,6 +161,18 @@ function seedDemoGroups(userId: string): Group[] {
       inviteCode: generateFriendCode(),
       ownerId: 'community',
       memberIds: [],
+      pendingRequests: [],
+      createdAt: now,
+    },
+    {
+      id: generateId(),
+      name: 'Prayer Warriors',
+      bio: 'A closer circle for deeper, ongoing prayer needs.',
+      visibility: 'invite_only',
+      inviteCode: generateFriendCode(),
+      ownerId: userId,
+      memberIds: [userId],
+      pendingRequests: [{ userId: generateId(), displayName: 'Priya' }],
       createdAt: now,
     },
   ];
@@ -410,6 +427,7 @@ export const useAppStore = create<AppState>()(
           inviteCode: generateFriendCode(),
           ownerId: user.id,
           memberIds: [user.id],
+          pendingRequests: [],
           createdAt: new Date().toISOString(),
         };
         set((s) => ({
@@ -428,21 +446,61 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
-      joinGroupByCode: (code) => {
-        const trimmed = code.trim().toUpperCase();
+      requestToJoinGroup: (groupId) => {
         const user = get().user;
-        if (!user) return { ok: false, message: 'Sign in first.' };
+        const group = get().groups.find((g) => g.id === groupId);
+        if (!user || !group) return { ok: false, message: 'Group not found.' };
+        if (group.visibility === 'open') return { ok: false, message: 'This group is open — just join it.' };
+        if (group.memberIds.includes(user.id)) return { ok: false, message: "You're already in this group." };
+        if (group.pendingRequests.some((r) => r.userId === user.id)) {
+          return { ok: false, message: 'Request already sent.' };
+        }
+        const request: GroupJoinRequest = { userId: user.id, displayName: user.displayName };
+        set((s) => ({
+          groups: s.groups.map((g) =>
+            g.id === groupId ? { ...g, pendingRequests: [...g.pendingRequests, request] } : g
+          ),
+        }));
+        return { ok: true, message: 'Request sent — the group owner needs to approve it.' };
+      },
+
+      approveJoinRequest: (groupId, userId) => {
+        const owner = get().user;
+        const group = get().groups.find((g) => g.id === groupId);
+        if (!owner || !group || group.ownerId !== owner.id) return;
+        set((s) => ({
+          groups: s.groups.map((g) =>
+            g.id === groupId
+              ? {
+                  ...g,
+                  memberIds: g.memberIds.includes(userId) ? g.memberIds : [...g.memberIds, userId],
+                  pendingRequests: g.pendingRequests.filter((r) => r.userId !== userId),
+                }
+              : g
+          ),
+        }));
+      },
+
+      denyJoinRequest: (groupId, userId) => {
+        const owner = get().user;
+        const group = get().groups.find((g) => g.id === groupId);
+        if (!owner || !group || group.ownerId !== owner.id) return;
+        set((s) => ({
+          groups: s.groups.map((g) =>
+            g.id === groupId ? { ...g, pendingRequests: g.pendingRequests.filter((r) => r.userId !== userId) } : g
+          ),
+        }));
+      },
+
+      findGroupByCode: (code) => {
+        const trimmed = code.trim().toUpperCase();
         if (!trimmed) return { ok: false, message: 'Enter an invite code.' };
         // Demo-mode: only matches groups already known on this device (the
         // seeded ones, or ones you created). A real invite code needs a
         // backend lookup — see docs/ARCHITECTURE.md.
         const group = get().groups.find((g) => g.inviteCode === trimmed);
         if (!group) return { ok: false, message: 'No group found with that code.' };
-        if (group.memberIds.includes(user.id)) return { ok: false, message: "You're already in that group." };
-        set((s) => ({
-          groups: s.groups.map((g) => (g.id === group.id ? { ...g, memberIds: [...g.memberIds, user.id] } : g)),
-        }));
-        return { ok: true, message: `Joined ${group.name}.` };
+        return { ok: true, message: group.name, groupId: group.id };
       },
 
       leaveGroup: (groupId) =>

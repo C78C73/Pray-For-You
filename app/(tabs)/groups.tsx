@@ -18,25 +18,39 @@ export default function GroupsScreen() {
   const user = useAppStore((s) => s.user)!;
   const groups = useAppStore((s) => s.groups);
   const joinGroupOpen = useAppStore((s) => s.joinGroupOpen);
-  const joinGroupByCode = useAppStore((s) => s.joinGroupByCode);
+  const requestToJoinGroup = useAppStore((s) => s.requestToJoinGroup);
+  const findGroupByCode = useAppStore((s) => s.findGroupByCode);
   const [code, setCode] = useState('');
+  const [search, setSearch] = useState('');
 
   const yours = groups.filter((g) => g.memberIds.includes(user.id));
-  const discover = groups.filter((g) => g.visibility === 'open' && !g.memberIds.includes(user.id));
+  const others = groups
+    .filter((g) => !g.memberIds.includes(user.id))
+    .filter((g) => g.name.toLowerCase().includes(search.trim().toLowerCase()));
 
-  function handleJoinByCode() {
-    const result = joinGroupByCode(code);
-    Alert.alert(result.ok ? 'Joined' : 'Not joined', result.message);
-    if (result.ok) setCode('');
+  function openGroup(id: string) {
+    router.push({ pathname: '/group/[id]', params: { id } });
   }
 
-  function renderGroup(group: Group, action?: React.ReactNode) {
+  function handleFindByCode() {
+    const result = findGroupByCode(code);
+    if (result.ok && result.groupId) {
+      setCode('');
+      openGroup(result.groupId);
+    } else {
+      Alert.alert('Not found', result.message);
+    }
+  }
+
+  function handleRequest(group: Group) {
+    const result = requestToJoinGroup(group.id);
+    Alert.alert(result.ok ? 'Request sent' : 'Not sent', result.message);
+  }
+
+  function renderGroup(group: Group) {
+    const requested = group.pendingRequests.some((r) => r.userId === user.id);
     return (
-      <Pressable
-        key={group.id}
-        style={styles.groupCard}
-        onPress={() => router.push({ pathname: '/group/[id]', params: { id: group.id } })}
-      >
+      <Pressable key={group.id} style={styles.groupCard} onPress={() => openGroup(group.id)}>
         <View style={{ flex: 1 }}>
           <View style={styles.groupTitleRow}>
             <Text style={typography.body} numberOfLines={1}>
@@ -60,8 +74,17 @@ export default function GroupsScreen() {
             {group.memberIds.length} {group.memberIds.length === 1 ? 'member' : 'members'}
           </Text>
         </View>
-        {action}
-        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
+        {group.visibility === 'open' ? (
+          <Pressable onPress={() => joinGroupOpen(group.id)} style={styles.joinBtn}>
+            <Text style={styles.joinBtnLabel}>Join</Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={() => handleRequest(group)} disabled={requested} style={[styles.joinBtn, requested && styles.joinBtnDone]}>
+            <Text style={[styles.joinBtnLabel, requested && styles.joinBtnLabelDone]}>
+              {requested ? 'Requested' : 'Request'}
+            </Text>
+          </Pressable>
+        )}
       </Pressable>
     );
   }
@@ -79,39 +102,40 @@ export default function GroupsScreen() {
         <TextInput
           value={code}
           onChangeText={setCode}
-          placeholder="Join with an invite code"
+          placeholder="Have an invite code?"
           placeholderTextColor={colors.textMuted}
           autoCapitalize="characters"
           style={styles.input}
         />
-        <PrimaryButton label="Join" onPress={handleJoinByCode} disabled={!code.trim()} />
+        <PrimaryButton label="Go" onPress={handleFindByCode} disabled={!code.trim()} />
       </View>
 
       <ScrollView contentContainerStyle={styles.list}>
         <Text style={[typography.heading, { marginTop: spacing.sm }]}>Your groups</Text>
         <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
           {yours.length === 0 ? (
-            <EmptyState icon="account-multiple-outline" title="No groups yet" body="Create one or join with a code." />
+            <EmptyState icon="account-multiple-outline" title="No groups yet" body="Create one or search below." />
           ) : (
             yours.map((g) => renderGroup(g))
           )}
         </View>
 
-        {discover.length > 0 && (
-          <>
-            <Text style={[typography.heading, { marginTop: spacing.lg }]}>Discover</Text>
-            <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
-              {discover.map((g) =>
-                renderGroup(
-                  g,
-                  <Pressable onPress={() => joinGroupOpen(g.id)} style={styles.joinBtn}>
-                    <Text style={styles.joinBtnLabel}>Join</Text>
-                  </Pressable>
-                )
-              )}
-            </View>
-          </>
-        )}
+        <Text style={[typography.heading, { marginTop: spacing.lg }]}>All groups</Text>
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search groups by name"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, { marginTop: spacing.sm }]}
+        />
+        <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
+          {others.length === 0 && (
+            <Text style={typography.caption}>
+              {search.trim() ? 'No groups match that search.' : 'No other groups yet — be the first to create one.'}
+            </Text>
+          )}
+          {others.map((g) => renderGroup(g))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -161,6 +185,8 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
       paddingVertical: spacing.xs,
       paddingHorizontal: spacing.sm,
     },
+    joinBtnDone: { backgroundColor: colors.border },
     joinBtnLabel: { fontSize: 12, fontWeight: '700', color: colors.primary },
+    joinBtnLabelDone: { color: colors.textMuted },
   });
 }

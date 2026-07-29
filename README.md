@@ -33,9 +33,13 @@ Implemented:
   OEB-US), verse of the day, offline fallback content
 - Add friends with a simple 6-character code; local prayer + reading
   reminders (max two notifications a day, by design)
-- **Groups**: create one with a name and bio, mark it open (anyone can
-  join/discover) or invite-only (join with a code); post a prayer need to
-  the group and everyone in it gets notified — see `app/group/[id].tsx`
+- **Groups**: create one with a name and bio. Every group is searchable/
+  browsable by anyone — visibility only changes how you *join*: **open**
+  groups are one tap, **invite-only** groups require a request the owner
+  approves (or deny) from the group's own page. An invite code is a
+  shortcut that jumps straight to a specific group rather than a way
+  around the request step. No cap on members. Post a prayer need and
+  everyone in the group gets notified — see `app/group/[id].tsx`
 - Light/dark theme with 5 accent colors, and a "show streak counter" switch
   that only hides the UI — the streak itself never stops counting
 - A dedicated **web layout**: one screen, four columns (Bible · people and

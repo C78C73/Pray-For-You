@@ -47,6 +47,11 @@ export interface Friend {
 
 export type GroupVisibility = 'open' | 'invite_only';
 
+export interface GroupJoinRequest {
+  userId: string;
+  displayName: string;
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -54,7 +59,8 @@ export interface Group {
   visibility: GroupVisibility;
   inviteCode: string;
   ownerId: string;
-  memberIds: string[];
+  memberIds: string[]; // no cap
+  pendingRequests: GroupJoinRequest[]; // invite_only groups only
   createdAt: string;
 }
 
