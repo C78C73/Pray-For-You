@@ -2,17 +2,16 @@ import { BibleVerse } from '../types';
 import { OFFLINE_PASSAGES } from '../data/verses';
 
 // Free, public-domain translations only (no license fees, no API key).
-// bible-api.com serves these same public-domain texts; if the request
-// fails (offline, proxy blocked, rate limited) we fall back to the small
-// bundled sample so the tab never shows an error to someone trying to pray.
-//
-// To add modern copyrighted translations (NIV, ESV, NLT) later you need a
-// licensed provider (e.g. API.Bible) and per-translation permission — see
-// docs/COST_ESTIMATE.md. Do not bundle copyrighted text without a license.
+// bible-api.com serves these same public-domain texts. Modern translations
+// like NIV, ESV, and NLT are still copyrighted and can't be added here —
+// see docs/BIBLICAL_ACCURACY.md and docs/COST_ESTIMATE.md for what a real
+// license through a provider like API.Bible would take.
 export const BIBLE_VERSIONS = [
-  { id: 'kjv', label: 'King James Version (KJV)' },
   { id: 'web', label: 'World English Bible (WEB)' },
+  { id: 'asv', label: 'American Standard Version (ASV)' },
+  { id: 'kjv', label: 'King James Version (KJV)' },
   { id: 'bbe', label: 'Bible in Basic English (BBE)' },
+  { id: 'webbe', label: 'World English Bible, British (WEBBE)' },
   { id: 'oeb-us', label: 'Open English Bible, US (OEB-US)' },
 ] as const;
 
@@ -26,6 +25,12 @@ interface BibleApiVerse {
   text: string;
 }
 
+/**
+ * Fetches a passage (e.g. "Genesis 1" or "John 3:16"). Returns an empty
+ * array on failure rather than silently substituting an unrelated verse —
+ * showing Psalm 23 when someone asked for Revelation 22 would be more
+ * confusing than just saying the chapter didn't load.
+ */
 export async function fetchPassage(
   reference: string,
   version: BibleVersionId
@@ -43,16 +48,16 @@ export async function fetchPassage(
       text: v.text.trim(),
     }));
   } catch {
-    return offlineFallback(reference);
+    return [];
   }
 }
 
-function offlineFallback(reference: string): BibleVerse[] {
+/** Only used for the small verse-of-the-day widget, which has its own bundled pool. */
+export function offlineSample(reference: string): BibleVerse[] {
   const key = Object.keys(OFFLINE_PASSAGES).find((k) =>
     k.toLowerCase().startsWith(reference.toLowerCase())
   );
-  if (key) return OFFLINE_PASSAGES[key];
-  return OFFLINE_PASSAGES['Psalm 23 (KJV)'];
+  return key ? OFFLINE_PASSAGES[key] : [];
 }
 
 export const SUGGESTED_PASSAGES = [

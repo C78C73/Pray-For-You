@@ -42,9 +42,13 @@ Implemented:
   everyone in the group gets notified — see `app/group/[id].tsx`
 - Light/dark theme with 5 accent colors, and a "show streak counter" switch
   that only hides the UI — the streak itself never stops counting
-- A dedicated **web layout**: one screen, four columns (Bible · people and
-  what they need prayer for · groups · your own request + streak), separate
-  from the phone's tab layout — see `app/(web)/dashboard.tsx`
+- **Bible tab**: the whole Bible, not a curated handful of passages — browse
+  all 66 books, any chapter, in six free public-domain translations, and
+  tap any verse to highlight it (it's saved). See `src/components/BibleReader.tsx`
+- A dedicated **web layout**: a left icon sidebar (Home / Bible / People /
+  Groups / You) and full-page views for each — not the phone's tab bar
+  stretched wide. Home shows the four sections as large tiles you click
+  into. See `app/(web)/_layout.tsx` and `app/(web)/pages/`
 
 Not implemented yet (see [docs/ROADMAP.md](docs/ROADMAP.md)):
 real accounts/sync across devices (friends and groups are demoable but
@@ -55,7 +59,7 @@ prayer requests, App/Play Store listings.
 
 ```bash
 npm install
-npm run web       # the website — a three-column dashboard, see below
+npm run web       # the website — sidebar + full pages, see below
 npm run android   # the native app — requires Android Studio / a device, or use Expo Go
 ```
 
@@ -68,13 +72,14 @@ This app is native on Android. The website isn't a stand-in for iOS
 specifically — it's the fallback for **anyone without an Android device**
 (iPhone, desktop, anything with a browser), so no one who wants to pray for
 their friends is locked out. It's a genuinely different layout, not the
-phone UI stretched wide: one screen, four columns side by side — Bible,
-people and what they need prayer for, groups, and your own request +
-streak (see `app/(web)/dashboard.tsx`). It's still installable to a home screen
-("Add to Home Screen" in the browser) for anyone who wants an app-like
-icon, but that's a bonus, not the point. Publishing natively to the Apple
-App Store needs a paid Apple Developer account and a Mac, which is why
-there's no separate iOS build — the website covers that gap for free.
+phone UI stretched wide: a left icon sidebar (Home, Bible, People, Groups,
+You) with each section as its own full page, and a Home page showing the
+four sections as tiles you click into (see `app/(web)/_layout.tsx` and
+`app/(web)/pages/`). It's still installable to a home screen ("Add to Home
+Screen" in the browser) for anyone who wants an app-like icon, but that's a
+bonus, not the point. Publishing natively to the Apple App Store needs a
+paid Apple Developer account and a Mac, which is why there's no separate
+iOS build — the website covers that gap for free.
 
 ## Project structure
 
@@ -82,7 +87,7 @@ there's no separate iOS build — the website covers that gap for free.
 app/                  Expo Router screens (file-based routing)
   welcome.tsx          sign-in screen
   (tabs)/              Android: Pray / Bible / Friends / Groups / Profile bottom tabs
-  (web)/dashboard.tsx  Web: single-page, 4-column dashboard
+  (web)/               Web: icon sidebar + full pages (pages/home, bible, people, groups, you)
   group/[id].tsx        group bio, members, invite code, scoped prayer feed
   new-group.tsx         modal: create a group (name, bio, open/invite-only)
   new-request.tsx      modal: post a prayer request (native)
@@ -91,7 +96,8 @@ app/                  Expo Router screens (file-based routing)
 src/
   store/useAppStore.ts single source of truth (Zustand + AsyncStorage)
   services/            storage, Bible API, notifications — swap-in points for a real backend
-  data/                symbols, frames, seed economy, offline Bible sample
+  data/                symbols, frames, seed economy, bible books/chapter counts
+  components/BibleReader.tsx  shared book/chapter browser used by both platforms
   theme/                light/dark + accent color system
   components/          shared UI (Symbol, PrayerCard, buttons, pills)
   utils/                streak math, ids, dates

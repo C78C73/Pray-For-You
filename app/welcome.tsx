@@ -17,7 +17,7 @@ export default function Welcome() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
 
-  if (user) return <Redirect href={Platform.OS === 'web' ? '/(web)/dashboard' : '/(tabs)'} />;
+  if (user) return <Redirect href={Platform.OS === 'web' ? '/pages/home' : '/(tabs)'} />;
 
   return (
     <KeyboardAvoidingView

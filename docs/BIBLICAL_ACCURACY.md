@@ -9,8 +9,9 @@ accident — undermines that. Rules for anyone (human or AI) contributing:
    is sourced from — one bundled sample, one live API — both public domain.
 2. **Only use translations you have the right to display.**
    - Public domain, free forever: KJV (King James Version), WEB (World
-     English Bible), ASV (American Standard Version), BBE (Bible in Basic
-     English), OEB-US (Open English Bible).
+     English Bible), WEBBE (WEB, British edition), ASV (American Standard
+     Version), BBE (Bible in Basic English), OEB-US (Open English Bible).
+     These are the six versions bundled in `src/services/bibleService.ts`.
    - Copyrighted, requires a license: NIV, ESV, NLT, NASB, CSB, and most
      translations published after ~1970. Do not bundle or fetch these
      without a signed license agreement (e.g. through API.Bible) — see

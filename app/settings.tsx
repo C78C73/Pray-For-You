@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, Switch, Pressable, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, Switch, Pressable, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -77,7 +77,7 @@ export default function Settings() {
   }
 
   return (
-    <View style={styles.wrap}>
+    <ScrollView style={styles.safe} contentContainerStyle={styles.wrap}>
       <Text style={typography.heading}>Appearance</Text>
       <View style={styles.card}>
         <Text style={[typography.caption, { marginBottom: spacing.xs }]}>Theme</Text>
@@ -159,16 +159,17 @@ export default function Settings() {
         <Text style={typography.caption}>Reminders are available in the Android app.</Text>
       )}
 
-      <View style={{ marginTop: spacing.xl }}>
+      <View style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}>
         <PrimaryButton label="Sign out" variant="secondary" onPress={handleSignOut} />
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardShadow: object) {
   return StyleSheet.create({
-    wrap: { flex: 1, backgroundColor: colors.background, padding: spacing.lg, gap: spacing.sm },
+    safe: { flex: 1, backgroundColor: colors.background },
+    wrap: { padding: spacing.lg, paddingBottom: spacing.xl * 2, gap: spacing.sm },
     card: {
       backgroundColor: colors.surface,
       borderRadius: radius.md,

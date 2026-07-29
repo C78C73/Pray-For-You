@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -37,9 +37,28 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.statsRow}>
-        {showStreak && <Stat icon="fire" label="Day streak" value={user.streak.count} />}
-        {showStreak && <Stat icon="trophy-outline" label="Best streak" value={user.streak.longestCount} />}
-        <Stat icon="sprout" label="Seeds" value={user.seeds} />
+        {showStreak && (
+          <Stat
+            icon="fire"
+            label="Day streak"
+            value={user.streak.count}
+            info="Days in a row you've prayed or read Scripture. Missing a day only breaks it if you're out of grace days (Settings → Streak)."
+          />
+        )}
+        {showStreak && (
+          <Stat
+            icon="trophy-outline"
+            label="Best streak"
+            value={user.streak.longestCount}
+            info="The longest streak you've ever had — this number never goes down, even if your current streak resets."
+          />
+        )}
+        <Stat
+          icon="sprout"
+          label="Seeds"
+          value={user.seeds}
+          info="Faithstreak's only currency — earned by praying for others, reading Scripture, adding friends, and creating groups. Never bought. Spend them on profile symbols and frames below."
+        />
       </View>
 
       {showStreak && user.streak.graceDaysAvailable > 0 && (
@@ -67,14 +86,14 @@ export default function ProfileScreen() {
   );
 }
 
-function Stat({ icon, label, value }: { icon: string; label: string; value: number }) {
+function Stat({ icon, label, value, info }: { icon: string; label: string; value: number; info: string }) {
   const { colors, typography } = useTheme();
   return (
-    <View style={{ alignItems: 'center', gap: 2 }}>
+    <Pressable style={{ alignItems: 'center', gap: 2 }} onPress={() => Alert.alert(label, info)}>
       <MaterialCommunityIcons name={icon as any} size={22} color={colors.primary} />
       <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{value}</Text>
       <Text style={typography.caption}>{label}</Text>
-    </View>
+    </Pressable>
   );
 }
 

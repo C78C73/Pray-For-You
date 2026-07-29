@@ -42,6 +42,7 @@ interface AppState {
   groups: Group[];
   notifications: AppNotification[];
   preferences: Preferences;
+  highlightedVerses: string[]; // "Book Chapter:Verse|VERSION" keys
 
   setHasHydrated: (v: boolean) => void;
   signIn: (method: AuthMethod, displayName: string, email: string | null) => void;
@@ -75,6 +76,8 @@ interface AppState {
   findGroupByCode: (code: string) => { ok: boolean; message: string; groupId?: string };
   leaveGroup: (groupId: string) => void;
   addGroupPrayerRequest: (groupId: string, text: string) => void;
+
+  toggleHighlight: (verseKey: string) => void;
 
   markNotificationRead: (id: string) => void;
 }
@@ -204,6 +207,7 @@ export const useAppStore = create<AppState>()(
       groups: [],
       notifications: [],
       preferences: DEFAULT_PREFERENCES,
+      highlightedVerses: [],
 
       setHasHydrated: (v) => set({ hasHydrated: v }),
 
@@ -215,12 +219,14 @@ export const useAppStore = create<AppState>()(
           prayers: [...seedDemoPrayers(), seedDemoGroupPrayer(groups[0].id)],
           friends: [],
           groups,
+          highlightedVerses: [],
         });
       },
 
       // Appearance and the streak-visibility switch are device settings, not
       // account data — they deliberately survive sign-out.
-      signOut: () => set({ user: null, prayers: [], friends: [], groups: [], notifications: [] }),
+      signOut: () =>
+        set({ user: null, prayers: [], friends: [], groups: [], notifications: [], highlightedVerses: [] }),
 
       setThemeMode: (themeMode) => set((s) => ({ preferences: { ...s.preferences, themeMode } })),
       setAccentId: (accentId) => set((s) => ({ preferences: { ...s.preferences, accentId } })),
@@ -541,6 +547,13 @@ export const useAppStore = create<AppState>()(
       markNotificationRead: (id) =>
         set((s) => ({
           notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+        })),
+
+      toggleHighlight: (verseKey) =>
+        set((s) => ({
+          highlightedVerses: s.highlightedVerses.includes(verseKey)
+            ? s.highlightedVerses.filter((k) => k !== verseKey)
+            : [...s.highlightedVerses, verseKey],
         })),
     }),
     {
