@@ -61,6 +61,22 @@ export async function notifyPrayedForYou(prayingFriendName: string) {
   });
 }
 
+/**
+ * "New prayer request in {group}" — in production this fans out to every
+ * member's device from a Cloud Function that reads the group's memberIds
+ * (see /functions). Locally we only have this one device, so it fires once
+ * here to represent "your group was notified."
+ */
+export async function notifyGroupPrayerRequest(groupName: string, authorName: string) {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: `New request in ${groupName} 🙏`,
+      body: `${authorName} shared something to pray for.`,
+    },
+    trigger: null,
+  });
+}
+
 export function isPushSupported() {
   return Platform.OS !== 'web';
 }

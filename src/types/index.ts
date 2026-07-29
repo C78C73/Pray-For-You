@@ -21,7 +21,7 @@ export interface UserProfile {
   createdAt: string;
 }
 
-export type PrayerVisibility = 'global' | 'friends';
+export type PrayerVisibility = 'global' | 'friends' | 'group';
 
 export interface PrayerRequest {
   id: string;
@@ -31,6 +31,7 @@ export interface PrayerRequest {
   authorFrameId: string;
   text: string;
   visibility: PrayerVisibility;
+  groupId?: string; // set when visibility === 'group'
   createdAt: string;
   prayedByIds: string[];
   answered: boolean;
@@ -42,6 +43,19 @@ export interface Friend {
   symbolId: string;
   frameId: string;
   friendCode: string;
+}
+
+export type GroupVisibility = 'open' | 'invite_only';
+
+export interface Group {
+  id: string;
+  name: string;
+  bio: string;
+  visibility: GroupVisibility;
+  inviteCode: string;
+  ownerId: string;
+  memberIds: string[];
+  createdAt: string;
 }
 
 export interface AppNotification {

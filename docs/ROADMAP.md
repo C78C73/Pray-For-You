@@ -14,6 +14,11 @@ strangers can post and see each other's content:
 - Real friend lookup (currently the "add by code" flow fabricates a demo
   friend locally since there's no backend yet — see the comment in
   `src/store/useAppStore.ts`)
+- Real group membership + invite-code lookup across devices (today,
+  `joinGroupByCode` only matches groups already known on your own device —
+  it can't find a group that only exists on someone else's phone yet), and
+  the same report/block/moderation coverage extended to group prayer feeds,
+  not just the global one
 
 ## Strong candidates to add next
 
@@ -25,10 +30,8 @@ strangers can post and see each other's content:
   build testimony and gratitude into the habit loop
 - **Reading plans** (e.g. a 7-day plan through Philippians) instead of only
   single-passage lookup
-- **Prayer circles / small groups** — a friend-group scoped feed, between
-  "just me" and "the whole world," matching how most people actually pray
-  for each other (family, small group, church)
-- **Dark mode** — simple, respects OS preference, no theme gimmicks
+- **Group roles** (owner can remove a member or transfer ownership) —
+  today anyone can leave, but there's no moderation inside a group yet
 - **Offline-first Bible** — bundle full WEB or KJV text (~4–5MB JSON) as a
   static asset so the Bible tab works with zero network at all, not just a
   fallback sample

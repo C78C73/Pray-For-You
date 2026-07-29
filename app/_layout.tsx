@@ -59,6 +59,11 @@ function AppShell() {
             name="edit-symbol"
             options={{ presentation: 'modal', headerShown: true, title: 'Your Symbol' }}
           />
+          <Stack.Screen
+            name="new-group"
+            options={{ presentation: 'modal', headerShown: true, title: 'New Group' }}
+          />
+          <Stack.Screen name="group/[id]" options={{ headerShown: true }} />
           <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         </Stack>
       </SafeAreaProvider>

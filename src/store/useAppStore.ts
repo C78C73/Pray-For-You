@@ -2,14 +2,23 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { AuthMethod, Friend, PrayerRequest, PrayerVisibility, UserProfile, AppNotification } from '../types';
+import {
+  AuthMethod,
+  Friend,
+  Group,
+  GroupVisibility,
+  PrayerRequest,
+  PrayerVisibility,
+  UserProfile,
+  AppNotification,
+} from '../types';
 import { generateId, generateFriendCode } from '../utils/id';
 import { todayKey } from '../utils/date';
 import { applyDailyActivity } from '../utils/streak';
 import { SEED_REWARDS } from '../data/seedRewards';
 import { SYMBOLS } from '../data/symbols';
 import { FRAMES } from '../data/frames';
-import { notifyPrayedForYou } from '../services/notificationService';
+import { notifyPrayedForYou, notifyGroupPrayerRequest } from '../services/notificationService';
 import { ThemeMode, AccentId } from '../theme/theme';
 
 interface Preferences {
@@ -29,6 +38,7 @@ interface AppState {
   user: UserProfile | null;
   prayers: PrayerRequest[];
   friends: Friend[];
+  groups: Group[];
   notifications: AppNotification[];
   preferences: Preferences;
 
@@ -55,6 +65,12 @@ interface AppState {
   addFriendByCode: (code: string) => { ok: boolean; message: string };
   removeFriend: (friendId: string) => void;
   prayForFriend: (friendId: string) => void;
+
+  createGroup: (name: string, bio: string, visibility: GroupVisibility) => { ok: boolean; message: string };
+  joinGroupOpen: (groupId: string) => void;
+  joinGroupByCode: (code: string) => { ok: boolean; message: string };
+  leaveGroup: (groupId: string) => void;
+  addGroupPrayerRequest: (groupId: string, text: string) => void;
 
   markNotificationRead: (id: string) => void;
 }
@@ -115,6 +131,52 @@ function seedDemoPrayers(): PrayerRequest[] {
   ];
 }
 
+// Demo-mode: seeded so Groups has something to browse/join on first run.
+// Both are 'open' on purpose — an invite-only group is easiest to try by
+// creating your own and testing joinGroupByCode with its real code, since
+// there's no backend yet to hand out a second device's invite code.
+function seedDemoGroups(userId: string): Group[] {
+  const now = new Date().toISOString();
+  return [
+    {
+      id: generateId(),
+      name: 'Sunday Small Group',
+      bio: 'A few of us who meet after service to pray and catch up.',
+      visibility: 'open',
+      inviteCode: generateFriendCode(),
+      ownerId: 'community',
+      memberIds: [userId],
+      createdAt: now,
+    },
+    {
+      id: generateId(),
+      name: 'Young Adults Prayer Circle',
+      bio: 'Weekly prayer requests for anyone in their 20s and 30s navigating faith and life.',
+      visibility: 'open',
+      inviteCode: generateFriendCode(),
+      ownerId: 'community',
+      memberIds: [],
+      createdAt: now,
+    },
+  ];
+}
+
+function seedDemoGroupPrayer(groupId: string): PrayerRequest {
+  return {
+    id: generateId(),
+    authorId: 'community',
+    authorName: 'Sam',
+    authorSymbolId: 'cross',
+    authorFrameId: 'none',
+    text: 'Traveling for work this week — safety and rest.',
+    visibility: 'group',
+    groupId,
+    createdAt: new Date().toISOString(),
+    prayedByIds: [],
+    answered: false,
+  };
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -122,22 +184,26 @@ export const useAppStore = create<AppState>()(
       user: null,
       prayers: [],
       friends: [],
+      groups: [],
       notifications: [],
       preferences: DEFAULT_PREFERENCES,
 
       setHasHydrated: (v) => set({ hasHydrated: v }),
 
       signIn: (method, displayName, email) => {
+        const user = newUser(method, displayName.trim() || 'Friend', email);
+        const groups = seedDemoGroups(user.id);
         set({
-          user: newUser(method, displayName.trim() || 'Friend', email),
-          prayers: seedDemoPrayers(),
+          user,
+          prayers: [...seedDemoPrayers(), seedDemoGroupPrayer(groups[0].id)],
           friends: [],
+          groups,
         });
       },
 
       // Appearance and the streak-visibility switch are device settings, not
       // account data — they deliberately survive sign-out.
-      signOut: () => set({ user: null, prayers: [], friends: [], notifications: [] }),
+      signOut: () => set({ user: null, prayers: [], friends: [], groups: [], notifications: [] }),
 
       setThemeMode: (themeMode) => set((s) => ({ preferences: { ...s.preferences, themeMode } })),
       setAccentId: (accentId) => set((s) => ({ preferences: { ...s.preferences, accentId } })),
@@ -330,6 +396,88 @@ export const useAppStore = create<AppState>()(
         // Real cross-device delivery needs a backend (functions/index.js);
         // simulated locally for now so the flow is demoable end to end.
         void notifyPrayedForYou(user.displayName);
+      },
+
+      createGroup: (name, bio, visibility) => {
+        const user = get().user;
+        if (!user) return { ok: false, message: 'Sign in first.' };
+        if (!name.trim()) return { ok: false, message: 'Give your group a name.' };
+        const group: Group = {
+          id: generateId(),
+          name: name.trim(),
+          bio: bio.trim(),
+          visibility,
+          inviteCode: generateFriendCode(),
+          ownerId: user.id,
+          memberIds: [user.id],
+          createdAt: new Date().toISOString(),
+        };
+        set((s) => ({
+          groups: [group, ...s.groups],
+          user: { ...user, seeds: user.seeds + SEED_REWARDS.createdGroup },
+        }));
+        return { ok: true, message: `${group.name} created.` };
+      },
+
+      joinGroupOpen: (groupId) => {
+        const user = get().user;
+        const group = get().groups.find((g) => g.id === groupId);
+        if (!user || !group || group.visibility !== 'open' || group.memberIds.includes(user.id)) return;
+        set((s) => ({
+          groups: s.groups.map((g) => (g.id === groupId ? { ...g, memberIds: [...g.memberIds, user.id] } : g)),
+        }));
+      },
+
+      joinGroupByCode: (code) => {
+        const trimmed = code.trim().toUpperCase();
+        const user = get().user;
+        if (!user) return { ok: false, message: 'Sign in first.' };
+        if (!trimmed) return { ok: false, message: 'Enter an invite code.' };
+        // Demo-mode: only matches groups already known on this device (the
+        // seeded ones, or ones you created). A real invite code needs a
+        // backend lookup — see docs/ARCHITECTURE.md.
+        const group = get().groups.find((g) => g.inviteCode === trimmed);
+        if (!group) return { ok: false, message: 'No group found with that code.' };
+        if (group.memberIds.includes(user.id)) return { ok: false, message: "You're already in that group." };
+        set((s) => ({
+          groups: s.groups.map((g) => (g.id === group.id ? { ...g, memberIds: [...g.memberIds, user.id] } : g)),
+        }));
+        return { ok: true, message: `Joined ${group.name}.` };
+      },
+
+      leaveGroup: (groupId) =>
+        set((s) => ({
+          groups: s.groups.map((g) =>
+            g.id === groupId ? { ...g, memberIds: g.memberIds.filter((id) => id !== s.user?.id) } : g
+          ),
+        })),
+
+      addGroupPrayerRequest: (groupId, text) => {
+        const user = get().user;
+        const group = get().groups.find((g) => g.id === groupId);
+        if (!user || !group || !text.trim()) return;
+        const request: PrayerRequest = {
+          id: generateId(),
+          authorId: user.id,
+          authorName: user.displayName,
+          authorSymbolId: user.symbolId,
+          authorFrameId: user.frameId,
+          text: text.trim(),
+          visibility: 'group',
+          groupId,
+          createdAt: new Date().toISOString(),
+          prayedByIds: [],
+          answered: false,
+        };
+        set((s) => ({
+          prayers: [request, ...s.prayers],
+          user: { ...user, seeds: user.seeds + SEED_REWARDS.postedPrayerRequest },
+        }));
+
+        // Fanning this out to every member's device needs a backend (a
+        // Cloud Function iterating the group's memberIds); simulated as one
+        // local notification here so the flow is demoable end to end.
+        void notifyGroupPrayerRequest(group.name, user.displayName);
       },
 
       markNotificationRead: (id) =>

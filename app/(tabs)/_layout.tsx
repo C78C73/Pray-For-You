@@ -41,6 +41,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="groups"
+        options={{
+          title: 'Groups',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-multiple-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',

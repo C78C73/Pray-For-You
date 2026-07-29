@@ -6,6 +6,7 @@ export const SEED_REWARDS = {
   readBibleToday: 5,
   dailyStreakBonus: 2, // on top of readBibleToday, once/day when streak continues
   addedFriend: 5,
+  createdGroup: 5,
   weeklyStreakMilestone: 20, // every 7-day multiple
 } as const;
 

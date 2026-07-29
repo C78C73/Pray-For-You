@@ -33,14 +33,19 @@ Implemented:
   OEB-US), verse of the day, offline fallback content
 - Add friends with a simple 6-character code; local prayer + reading
   reminders (max two notifications a day, by design)
-- A dedicated **web layout**: one screen, three columns (Bible · people and
-  what they need prayer for, each with a one-tap "I prayed for you" ·
-  your own request + streak), separate from the phone's tab layout —
-  see `app/(web)/dashboard.tsx`
+- **Groups**: create one with a name and bio, mark it open (anyone can
+  join/discover) or invite-only (join with a code); post a prayer need to
+  the group and everyone in it gets notified — see `app/group/[id].tsx`
+- Light/dark theme with 5 accent colors, and a "show streak counter" switch
+  that only hides the UI — the streak itself never stops counting
+- A dedicated **web layout**: one screen, four columns (Bible · people and
+  what they need prayer for · groups · your own request + streak), separate
+  from the phone's tab layout — see `app/(web)/dashboard.tsx`
 
 Not implemented yet (see [docs/ROADMAP.md](docs/ROADMAP.md)):
-real accounts/sync across devices, real push delivery across devices,
-content moderation for prayer requests, App/Play Store listings.
+real accounts/sync across devices (friends and groups are demoable but
+single-device), real push delivery across devices, content moderation for
+prayer requests, App/Play Store listings.
 
 ## Running it
 
@@ -59,9 +64,9 @@ This app is native on Android. The website isn't a stand-in for iOS
 specifically — it's the fallback for **anyone without an Android device**
 (iPhone, desktop, anything with a browser), so no one who wants to pray for
 their friends is locked out. It's a genuinely different layout, not the
-phone UI stretched wide: one screen, three columns side by side — Bible,
-people and what they need prayer for, and your own request + streak (see
-`app/(web)/dashboard.tsx`). It's still installable to a home screen
+phone UI stretched wide: one screen, four columns side by side — Bible,
+people and what they need prayer for, groups, and your own request +
+streak (see `app/(web)/dashboard.tsx`). It's still installable to a home screen
 ("Add to Home Screen" in the browser) for anyone who wants an app-like
 icon, but that's a bonus, not the point. Publishing natively to the Apple
 App Store needs a paid Apple Developer account and a Mac, which is why
@@ -72,15 +77,18 @@ there's no separate iOS build — the website covers that gap for free.
 ```
 app/                  Expo Router screens (file-based routing)
   welcome.tsx          sign-in screen
-  (tabs)/              Android: Pray / Bible / Friends / Profile bottom tabs
-  (web)/dashboard.tsx  Web: single-page, 3-column dashboard
+  (tabs)/              Android: Pray / Bible / Friends / Groups / Profile bottom tabs
+  (web)/dashboard.tsx  Web: single-page, 4-column dashboard
+  group/[id].tsx        group bio, members, invite code, scoped prayer feed
+  new-group.tsx         modal: create a group (name, bio, open/invite-only)
   new-request.tsx      modal: post a prayer request (native)
   edit-symbol.tsx      modal: choose/unlock symbol + frame, upload photo
-  settings.tsx         reminders, sign out
+  settings.tsx         reminders, appearance, sign out
 src/
   store/useAppStore.ts single source of truth (Zustand + AsyncStorage)
   services/            storage, Bible API, notifications — swap-in points for a real backend
   data/                symbols, frames, seed economy, offline Bible sample
+  theme/                light/dark + accent color system
   components/          shared UI (Symbol, PrayerCard, buttons, pills)
   utils/                streak math, ids, dates
 functions/             reference Cloud Function for real cross-device push (not deployed)

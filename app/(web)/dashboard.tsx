@@ -58,6 +58,7 @@ export default function Dashboard() {
           onAddFriend={addFriendByCode}
           onPray={prayForFriend}
         />
+        <GroupsColumn />
         <YouColumn user={user} prayers={prayers} onSubmit={addPrayerRequest} />
       </ScrollView>
     </View>
@@ -247,6 +248,88 @@ function PeopleColumn({
   );
 }
 
+function GroupsColumn() {
+  const router = useRouter();
+  const { colors, spacing, typography, styles } = useDashboardTheme();
+  const user = useAppStore((s) => s.user)!;
+  const groups = useAppStore((s) => s.groups);
+  const joinGroupOpen = useAppStore((s) => s.joinGroupOpen);
+  const joinGroupByCode = useAppStore((s) => s.joinGroupByCode);
+  const [code, setCode] = useState('');
+
+  const yours = groups.filter((g) => g.memberIds.includes(user.id));
+  const discover = groups.filter((g) => g.visibility === 'open' && !g.memberIds.includes(user.id));
+
+  function handleJoin() {
+    const result = joinGroupByCode(code);
+    Alert.alert(result.ok ? 'Joined' : 'Not joined', result.message);
+    if (result.ok) setCode('');
+  }
+
+  function openGroup(id: string) {
+    router.push({ pathname: '/group/[id]', params: { id } });
+  }
+
+  return (
+    <Column title="Groups" icon="account-multiple-outline">
+      <View style={styles.addRow}>
+        <TextInput
+          value={code}
+          onChangeText={setCode}
+          placeholder="Join with a code"
+          placeholderTextColor={colors.textMuted}
+          autoCapitalize="characters"
+          style={styles.input}
+        />
+        <PrimaryButton label="Join" onPress={handleJoin} disabled={!code.trim()} />
+      </View>
+
+      <Pressable onPress={() => router.push('/new-group')} style={styles.createGroupBtn}>
+        <MaterialCommunityIcons name="plus" size={16} color={colors.primary} />
+        <Text style={styles.createGroupLabel}>Create a group</Text>
+      </Pressable>
+
+      <ScrollView style={styles.scrollArea} contentContainerStyle={{ gap: spacing.sm }}>
+        {yours.length === 0 && discover.length === 0 && (
+          <Text style={[typography.caption, { marginTop: spacing.md }]}>
+            Create a group or join one with an invite code.
+          </Text>
+        )}
+        {yours.map((g) => (
+          <Pressable key={g.id} onPress={() => openGroup(g.id)} style={styles.groupRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.body, { fontWeight: '600' }]}>{g.name}</Text>
+              <Text style={typography.caption}>
+                {g.memberIds.length} {g.memberIds.length === 1 ? 'member' : 'members'}
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textMuted} />
+          </Pressable>
+        ))}
+
+        {discover.length > 0 && (
+          <>
+            <Text style={[typography.caption, { marginTop: spacing.sm }]}>Discover</Text>
+            {discover.map((g) => (
+              <View key={g.id} style={styles.groupRow}>
+                <Pressable style={{ flex: 1 }} onPress={() => openGroup(g.id)}>
+                  <Text style={typography.body}>{g.name}</Text>
+                  <Text style={typography.caption}>
+                    {g.memberIds.length} {g.memberIds.length === 1 ? 'member' : 'members'}
+                  </Text>
+                </Pressable>
+                <Pressable onPress={() => joinGroupOpen(g.id)} style={styles.joinBtn}>
+                  <Text style={styles.joinBtnLabel}>Join</Text>
+                </Pressable>
+              </View>
+            ))}
+          </>
+        )}
+      </ScrollView>
+    </Column>
+  );
+}
+
 function YouColumn({
   user,
   prayers,
@@ -409,6 +492,26 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
       ...cardShadow,
     },
     friendRequestText: { fontStyle: 'italic' },
+    createGroupBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
+    createGroupLabel: { fontSize: 13, fontWeight: '600', color: colors.primary },
+    groupRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.sm,
+      ...cardShadow,
+    },
+    joinBtn: {
+      backgroundColor: colors.primarySoft,
+      borderRadius: radius.pill,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+    },
+    joinBtnLabel: { fontSize: 12, fontWeight: '700', color: colors.primary },
     prayButton: {
       flexDirection: 'row',
       alignItems: 'center',
