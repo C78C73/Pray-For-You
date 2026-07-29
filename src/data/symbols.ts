@@ -11,7 +11,7 @@ export interface SymbolDef {
 export const SYMBOLS: SymbolDef[] = [
   { id: 'cross', label: 'Cross', icon: 'cross', costSeeds: 0 },
   { id: 'hands-pray', label: 'Praying Hands', icon: 'hands-pray', costSeeds: 0 },
-  { id: 'dove', label: 'Dove', icon: 'dove', costSeeds: 25 },
+  { id: 'dove', label: 'Dove', icon: 'bird', costSeeds: 25 },
   { id: 'fish', label: 'Fish (Ichthys)', icon: 'fish', costSeeds: 25 },
   { id: 'anchor', label: 'Anchor (Hope)', icon: 'anchor', costSeeds: 40 },
   { id: 'sprout', label: 'Sprout (Growth)', icon: 'sprout', costSeeds: 40 },

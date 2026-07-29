@@ -180,13 +180,15 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
     visibilityLabel: { fontSize: 11, color: colors.textMuted },
     memberCount: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
     joinBtn: {
+      height: 28,
       backgroundColor: colors.primarySoft,
       borderRadius: radius.pill,
-      paddingVertical: spacing.xs,
       paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     joinBtnDone: { backgroundColor: colors.border },
-    joinBtnLabel: { fontSize: 12, fontWeight: '700', color: colors.primary },
+    joinBtnLabel: { fontSize: 12, lineHeight: 16, fontWeight: '700', color: colors.primary },
     joinBtnLabelDone: { color: colors.textMuted },
   });
 }

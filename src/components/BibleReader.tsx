@@ -35,6 +35,9 @@ export function BibleReader() {
   const [failed, setFailed] = useState(false);
 
   const book = BIBLE_BOOKS.find((b) => b.name === bookName) ?? null;
+  const bookIndex = book ? BIBLE_BOOKS.findIndex((b) => b.name === book.name) : -1;
+  const isFirstChapterOfBible = !book || (bookIndex === 0 && chapter === 1);
+  const isLastChapterOfBible = !book || (bookIndex === BIBLE_BOOKS.length - 1 && chapter === book.chapters);
   const readToday = user.streak.lastActiveDate === todayKey();
 
   useEffect(() => {
@@ -66,8 +69,22 @@ export function BibleReader() {
   function changeChapter(delta: number) {
     if (!book || !chapter) return;
     const next = chapter + delta;
-    if (next < 1 || next > book.chapters) return;
-    setChapter(next);
+    if (next >= 1 && next <= book.chapters) {
+      setChapter(next);
+      return;
+    }
+    const bookIndex = BIBLE_BOOKS.findIndex((b) => b.name === book.name);
+    if (delta > 0) {
+      const nextBook = BIBLE_BOOKS[bookIndex + 1];
+      if (!nextBook) return; // Revelation 22 — end of the Bible
+      setBookName(nextBook.name);
+      setChapter(1);
+    } else {
+      const prevBook = BIBLE_BOOKS[bookIndex - 1];
+      if (!prevBook) return; // Genesis 1 — start of the Bible
+      setBookName(prevBook.name);
+      setChapter(prevBook.chapters);
+    }
   }
 
   const filteredBooks = BIBLE_BOOKS.filter((b) => b.name.toLowerCase().includes(search.trim().toLowerCase()));
@@ -211,16 +228,16 @@ export function BibleReader() {
         <View style={styles.navRow}>
           <Pressable
             onPress={() => changeChapter(-1)}
-            disabled={!book || chapter === 1}
-            style={[styles.navBtn, (!book || chapter === 1) && styles.navBtnDisabled]}
+            disabled={isFirstChapterOfBible}
+            style={[styles.navBtn, isFirstChapterOfBible && styles.navBtnDisabled]}
           >
             <MaterialCommunityIcons name="chevron-left" size={20} color={colors.text} />
             <Text style={typography.body}>Prev</Text>
           </Pressable>
           <Pressable
             onPress={() => changeChapter(1)}
-            disabled={!book || chapter === book.chapters}
-            style={[styles.navBtn, (!book || chapter === book?.chapters) && styles.navBtnDisabled]}
+            disabled={isLastChapterOfBible}
+            style={[styles.navBtn, isLastChapterOfBible && styles.navBtnDisabled]}
           >
             <Text style={typography.body}>Next</Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color={colors.text} />
@@ -243,15 +260,17 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
     scrollPad: { padding: spacing.lg, paddingTop: spacing.md, gap: spacing.sm },
     versionRow: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xs },
     versionChip: {
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.sm,
+      height: 34,
+      paddingHorizontal: spacing.md,
       borderRadius: radius.pill,
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     versionChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-    versionChipLabel: { fontSize: 12, fontWeight: '600', color: colors.text },
+    versionChipLabel: { fontSize: 13, lineHeight: 18, fontWeight: '600', color: colors.text },
     versionChipLabelActive: { color: colors.primaryText },
     search: {
       marginHorizontal: spacing.lg,
@@ -268,15 +287,18 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
     sectionTitle: { marginTop: spacing.md, marginBottom: spacing.xs },
     bookGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     bookChip: {
+      minHeight: 40,
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.md,
       borderRadius: radius.pill,
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
       ...cardShadow,
     },
-    bookChipLabel: { fontSize: 14, color: colors.text },
+    bookChipLabel: { fontSize: 14, lineHeight: 18, color: colors.text },
     subHeader: {
       flexDirection: 'row',
       alignItems: 'center',

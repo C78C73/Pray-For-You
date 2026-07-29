@@ -105,6 +105,7 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
     wrap: { padding: spacing.xl, gap: spacing.lg, maxWidth: 760, width: '100%', alignSelf: 'center' },
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
     codeChip: {
+      height: 32,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
@@ -112,10 +113,9 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: radius.pill,
-      paddingVertical: spacing.xs,
       paddingHorizontal: spacing.sm,
     },
-    codeChipLabel: { fontSize: 13, fontWeight: '700', color: colors.primary, letterSpacing: 1 },
+    codeChipLabel: { fontSize: 13, lineHeight: 17, fontWeight: '700', color: colors.primary, letterSpacing: 1 },
     addRow: { flexDirection: 'row', gap: spacing.sm },
     input: {
       flex: 1,

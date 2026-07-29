@@ -112,13 +112,16 @@ function makeStyles(colors: ThemeColors, spacing: Spacing, radius: Radius, cardS
       color: colors.primary,
     },
     answeredTag: {
+      height: 22,
       backgroundColor: colors.successSoft,
       borderRadius: radius.pill,
-      paddingVertical: 2,
       paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     answeredText: {
       fontSize: 11,
+      lineHeight: 15,
       fontWeight: '700',
       color: colors.success,
     },
